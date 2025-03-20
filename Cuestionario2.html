@@ -143,12 +143,12 @@
       }
     });
 
-    if (score === 30) {
+    if (score >= 70) {
       message.style.color = 'green';
-      message.textContent = '🎉 ¡Felicidades! Respondiste todo correctamente. 🎉';
+      message.textContent = '🎉 ¡Excelente! Has aprobado el cuestionario. 🎉';
     } else {
       message.style.color = 'red';
-      message.textContent = `🤔 Has obtenido ${score}/30 puntos. ¡Sigue aprendiendo!`;
+      message.textContent = `🤔 Has obtenido ${score}/100 puntos. ¡Sigue aprendiendo!`;
     }
   });
 </script>
