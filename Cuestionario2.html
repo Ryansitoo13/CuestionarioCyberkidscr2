@@ -29,6 +29,13 @@
       text-shadow: 1px 1px 2px #fff;
     }
 
+    p#instructions {
+      font-size: 18px;
+      color: #333;
+      margin: 15px 0;
+      text-align: center;
+    }
+
     .question {
       background-color: #E6E6FA;
       border: 3px dashed #9400D3;
@@ -75,6 +82,15 @@
       font-weight: bold;
       text-align: center;
       color: #D32F2F;
+      margin-top: 15px;
+    }
+
+    #score-board {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 15px;
+      color: #333;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -82,6 +98,10 @@
 
 <div class="container">
   <h1>🔥 Cuestionario CyberKids CR2 🔥</h1>
+  <p id="instructions">
+    Tienes <strong>2 intentos</strong> para lograr la mejor puntuación posible (cada pregunta vale 15 puntos).
+    Si recargas la página, tus intentos restantes y tu mejor puntuación se mantendrán.
+  </p>
 
   <div id="quiz">
     <!-- Pregunta 1 -->
@@ -197,21 +217,49 @@
 
   <button id="verify-btn">✅ Verificar Respuestas</button>
   <div id="message"></div>
+  <div id="score-board"></div>
 </div>
 
 <script>
+  // Recuperamos de localStorage los valores previos (si existen)
+  let attempts = parseInt(localStorage.getItem('attempts') || '0');
+  let bestScore = parseInt(localStorage.getItem('bestScore') || '0');
+  
+  const maxAttempts = 2; // Máximo de intentos permitidos
   const verifyBtn = document.getElementById('verify-btn');
   const quiz = document.getElementById('quiz');
   const message = document.getElementById('message');
+  const scoreBoard = document.getElementById('score-board');
+
+  // Mostramos la mejor puntuación si existe
+  if (bestScore > 0) {
+    scoreBoard.textContent = `Tu mejor puntuación anterior es: ${bestScore} puntos.`;
+  }
+
+  // Si el usuario ya consumió los 2 intentos, bloqueamos el botón
+  if (attempts >= maxAttempts) {
+    verifyBtn.disabled = true;
+    verifyBtn.style.opacity = '0.5';
+    message.style.color = 'red';
+    message.textContent = `Ya no tienes más intentos. Tu mejor puntuación fue de ${bestScore} puntos.`;
+  }
 
   verifyBtn.addEventListener('click', function() {
+    // Si ya no hay intentos, salimos
+    if (attempts >= maxAttempts) return;
+
+    attempts++;
+    localStorage.setItem('attempts', attempts);
+
     let score = 0;
     const questions = quiz.querySelectorAll('.question');
     // Cada pregunta vale 15 puntos
     const pointsPerQuestion = 15;
     // Total = 10 preguntas * 15 puntos = 150
     const totalPossibleScore = questions.length * pointsPerQuestion;
+    const passingScore = totalPossibleScore * 0.7; // 70%
 
+    // Calculamos la puntuación
     questions.forEach(q => {
       const correctValue = q.getAttribute('data-correct');
       const radios = q.querySelectorAll('input[type=\"radio\"]');
@@ -228,17 +276,37 @@
       }
     });
 
-    // Umbral = 70% de 150 = 105 puntos
-    if (score >= 105) {
+    // Si es la mejor puntuación, la guardamos
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('bestScore', bestScore.toString());
+      scoreBoard.textContent = `¡Nueva mejor puntuación!: ${bestScore} puntos.`;
+    } else {
+      // Si no es mejor, y ya teníamos una previa
+      if (bestScore > 0) {
+        scoreBoard.textContent = `Tu mejor puntuación sigue siendo: ${bestScore} puntos.`;
+      }
+    }
+
+    // Mostramos mensaje de aprobación o no
+    if (score >= passingScore) {
       message.style.color = 'green';
-      message.textContent = `🎉 ¡Excelente! Has aprobado con ${score}/${totalPossibleScore} puntos. 🎉`;
+      message.textContent = `🎉 ¡Excelente! Obtuviste ${score}/${totalPossibleScore} puntos.`;
     } else {
       message.style.color = 'red';
-      message.textContent = `🤔 Has obtenido ${score}/${totalPossibleScore} puntos. ¡Sigue aprendiendo!`;
+      message.textContent = `🤔 Obtuviste ${score}/${totalPossibleScore} puntos. ¡Sigue aprendiendo!`;
+    }
+
+    // Si ya se agotaron los intentos, deshabilitamos el botón
+    if (attempts >= maxAttempts) {
+      verifyBtn.disabled = true;
+      verifyBtn.style.opacity = '0.5';
+      message.textContent += ` Has utilizado tus ${maxAttempts} intentos.`;
     }
   });
 </script>
 
 </body>
 </html>
+
 
